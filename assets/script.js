@@ -6,7 +6,7 @@
 
   const doc = document;
   const root = doc.documentElement;
-  const lang = root.lang === 'en' ? 'en' : 'it';
+  const lang = /^en/i.test(root.lang) ? 'en' : /^pt/i.test(root.lang) ? 'pt' : 'it';
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   const EMAIL = 'bottazzinibruno@gmail.com';
@@ -32,31 +32,40 @@
       copied: 'Indirizzo copiato.', copyFail: 'Puoi copiare l’indirizzo qui sopra.',
       steps: ['interpreto la domanda', 'cerco in: ', 'compongo la risposta'], profile: 'profilo', sources: 'fonti',
       introQ: 'Chi è Bruno?',
-      pGo: 'Vai a', pDo: 'Azioni', pAgent: 'Agente', pAsk: 'Chiedi all’agente', pHome: 'Inizio',
-      pCopy: 'Copia l’email', pLang: 'Switch to English', pLangHint: 'EN', pFocus: 'Fai una domanda all’agente',
+      pGo: 'Vai a', pDo: 'Azioni', pLangs: 'Lingua', pAgent: 'Agente', pAsk: 'Chiedi all’agente', pHome: 'Inizio',
+      pCopy: 'Copia l’email', pFocus: 'Fai una domanda all’agente',
       hello: 'Ciao! Il codice è vanilla: niente framework, niente tracker. Prova la command palette.'
     },
     en: {
       copied: 'Email address copied.', copyFail: 'You can copy the address above.',
       steps: ['parsing the question', 'searching: ', 'composing the answer'], profile: 'profile', sources: 'sources',
       introQ: 'Who is Bruno?',
-      pGo: 'Go to', pDo: 'Actions', pAgent: 'Agent', pAsk: 'Ask the agent', pHome: 'Top',
-      pCopy: 'Copy email address', pLang: 'Passa all’italiano', pLangHint: 'IT', pFocus: 'Ask the agent a question',
+      pGo: 'Go to', pDo: 'Actions', pLangs: 'Language', pAgent: 'Agent', pAsk: 'Ask the agent', pHome: 'Top',
+      pCopy: 'Copy email address', pFocus: 'Ask the agent a question',
       hello: 'Hi! The code is vanilla: no framework, no trackers. Try the command palette.'
+    },
+    pt: {
+      copied: 'Endereço copiado.', copyFail: 'Você pode copiar o endereço acima.',
+      steps: ['interpretando a pergunta', 'buscando em: ', 'compondo a resposta'], profile: 'perfil', sources: 'fontes',
+      introQ: 'Quem é o Bruno?',
+      pGo: 'Ir para', pDo: 'Ações', pLangs: 'Idioma', pAgent: 'Agente', pAsk: 'Perguntar ao agente', pHome: 'Início',
+      pCopy: 'Copiar o e-mail', pFocus: 'Fazer uma pergunta ao agente',
+      hello: 'Oi! O código é vanilla: sem framework, sem trackers. Experimente a paleta de comandos.'
     }
   }[lang];
 
   // Sections the agent can cite and the palette can jump to.
   const SEC = {
-    ai: { href: '#ai', it: 'Competence Center', en: 'Competence Center' },
-    method: { href: '#method', it: 'Metodo', en: 'Method' },
-    approach: { href: '#approach', it: 'Approccio', en: 'Approach' },
-    experience: { href: '#experience', it: 'Percorso', en: 'Experience' },
-    skills: { href: '#skills', it: 'Competenze', en: 'Skills' },
-    learning: { href: '#learning', it: 'Studio continuo', en: 'Learning' },
-    projects: { href: '#projects', it: 'Progetti', en: 'Projects' },
-    contact: { href: '#contact', it: 'Contatti', en: 'Contact' },
-    mail: { href: 'mailto:' + EMAIL, it: 'Scrivi a Bruno', en: 'Email Bruno' }
+    ai: { href: '#ai', it: 'Competence Center', en: 'Competence Center', pt: 'Competence Center' },
+    method: { href: '#method', it: 'Metodo', en: 'Method', pt: 'Método' },
+    approach: { href: '#approach', it: 'Approccio', en: 'Approach', pt: 'Abordagem' },
+    experience: { href: '#experience', it: 'Percorso', en: 'Experience', pt: 'Trajetória' },
+    skills: { href: '#skills', it: 'Competenze', en: 'Skills', pt: 'Competências' },
+    learning: { href: '#learning', it: 'Studio continuo', en: 'Learning', pt: 'Estudo contínuo' },
+    projects: { href: '#projects', it: 'Progetti', en: 'Projects', pt: 'Projetos' },
+    opensource: { href: '#opensource', it: 'Open source', en: 'Open source', pt: 'Open source' },
+    contact: { href: '#contact', it: 'Contatti', en: 'Contact', pt: 'Contato' },
+    mail: { href: 'mailto:' + EMAIL, it: 'Scrivi a Bruno', en: 'Email Bruno', pt: 'Escrever para o Bruno' }
   };
 
   /* ---------- menu ---------- */
@@ -309,74 +318,102 @@
 
   /* ---------- demo agent ----------
      Scripted, local, honest about it: keyword matching over answers Bruno wrote. No model, no requests. */
+  // k: keywords (lowercase, no accents; a trailing space asks for the whole word; Italian, English and Portuguese mixed)
+  // p: topic weight (specific topics beat generic ones)   c: sections cited under the answer   a: the answer, per language
   const KB = [
-    { k: ['chi e', 'chi sei', 'who is', 'who are', 'whoami', 'presenta', 'introduce', 'about', 'bio '], p: 1, c: ['experience', 'ai'],
+    { k: ['chi e', 'chi sei', 'who is', 'who are', 'whoami', 'presenta', 'introduce', 'about', 'bio ', 'quem e', 'sobre', 'apresent'], p: 1, c: ['experience', 'ai'],
       a: { it: 'Bruno Bottazzini è Software Architect e Technical Lead in Tinexta Infocert, e vive a Torino. Progetta piattaforme cloud-native, ha oltre quindici anni di software alle spalle tra Brasile e Italia e fa parte dell’AI Competence Center dell’azienda.',
-           en: 'Bruno Bottazzini is a Software Architect and Technical Lead at Tinexta Infocert, based in Turin. He designs cloud-native platforms, has more than fifteen years of software behind him across Brazil and Italy, and is part of the company’s AI Competence Center.' } },
-    { k: ['ai ', 'ia ', 'intelligenza artificiale', 'artificial intelligence', 'llm', 'genai', 'copilot', 'usa l ai', 'use ai', 'uses ai'], p: 2.5, c: ['method', 'approach'],
+           en: 'Bruno Bottazzini is a Software Architect and Technical Lead at Tinexta Infocert, based in Turin. He designs cloud-native platforms, has more than fifteen years of software behind him across Brazil and Italy, and is part of the company’s AI Competence Center.',
+           pt: 'Bruno Bottazzini é Software Architect e Technical Lead na Tinexta Infocert e mora em Turim. Projeta plataformas cloud-native, tem mais de quinze anos de software nas costas entre Brasil e Itália e faz parte do AI Competence Center da empresa.' } },
+    { k: ['ai ', 'ia ', 'intelligenza artificiale', 'artificial intelligence', 'inteligencia artificial', 'llm', 'genai', 'copilot', 'usa l ai', 'use ai', 'uses ai', 'usa a ia', 'usa ia'], p: 2.5, c: ['method', 'approach'],
       a: { it: 'Per Bruno l’AI è parte del metodo di lavoro: sviluppo guidato dalle specifiche, coding assistito, simulazione di scenari architetturali, review e test automatizzati. Con una regola: l’AI accelera, le decisioni restano alle persone.',
-           en: 'For Bruno, AI is part of the working method: spec-driven development, assisted coding, architectural scenario simulation, automated review and testing. With one rule: AI accelerates, decisions stay with people.' } },
+           en: 'For Bruno, AI is part of the working method: spec-driven development, assisted coding, architectural scenario simulation, automated review and testing. With one rule: AI accelerates, decisions stay with people.',
+           pt: 'Para o Bruno, a IA faz parte do método de trabalho: desenvolvimento guiado por especificações, coding assistido, simulação de cenários arquiteturais, revisão e testes automatizados. Com uma regra: a IA acelera, as decisões continuam com as pessoas.' } },
     { k: ['ai-dlc', 'aidlc', 'dlc', 'bolt', 'inception', 'mob ', 'lifecycle', 'life cycle', 'aws'], p: 2, c: ['method'],
       a: { it: 'AI-DLC è il ciclo di sviluppo AI-native descritto da AWS. L’AI propone un piano, fa domande e implementa solo dopo la validazione del team. Tre fasi: Inception, Construction, Operations. Al posto degli sprint ci sono i bolt, cicli di ore o giorni. Bruno lo ha portato in sviluppo reale con il Competence Center.',
-           en: 'AI-DLC is the AI-native development lifecycle described by AWS. The AI drafts a plan, asks questions and implements only after the team validates. Three phases: Inception, Construction, Operations. Sprints give way to bolts, cycles of hours or days. Bruno took it into real delivery with the Competence Center.' } },
-    { k: ['sdd', 'spec', 'specifica', 'specifiche'], p: 2, c: ['method', 'ai'],
+           en: 'AI-DLC is the AI-native development lifecycle described by AWS. The AI drafts a plan, asks questions and implements only after the team validates. Three phases: Inception, Construction, Operations. Sprints give way to bolts, cycles of hours or days. Bruno took it into real delivery with the Competence Center.',
+           pt: 'AI-DLC é o ciclo de desenvolvimento AI-native descrito pela AWS. A IA propõe um plano, faz perguntas e só implementa depois da validação do time. Três fases: Inception, Construction, Operations. No lugar dos sprints entram os bolts, ciclos de horas ou dias. O Bruno levou o método para o desenvolvimento real com o Competence Center.' } },
+    { k: ['sdd', 'spec', 'specifica', 'specifiche', 'especific'], p: 2, c: ['method', 'ai'],
       a: { it: 'Nello Spec-Driven Development la specifica viene prima del codice ed è la fonte di verità: versionata nel repository, guida persone e agenti. In Tinexta Infocert Bruno e il Competence Center lo hanno portato in sviluppo reale.',
-           en: 'In Spec-Driven Development the spec comes before the code and is the source of truth: versioned in the repository, it guides both people and agents. At Tinexta Infocert, Bruno and the Competence Center took it into real delivery.' } },
-    { k: ['competence', 'center', 'centre', 'coe ', 'champion', 'workshop', 'onboarding', 'formazione', 'abilitazione', 'training', 'enablement', 'insegn', 'teach'], p: 1.5, c: ['ai'],
+           en: 'In Spec-Driven Development the spec comes before the code and is the source of truth: versioned in the repository, it guides both people and agents. At Tinexta Infocert, Bruno and the Competence Center took it into real delivery.',
+           pt: 'No Spec-Driven Development a especificação vem antes do código e é a fonte da verdade: versionada no repositório, guia pessoas e agentes. Na Tinexta Infocert, o Bruno e o Competence Center levaram o método para o desenvolvimento real.' } },
+    { k: ['competence', 'center', 'centre', 'coe ', 'champion', 'workshop', 'onboarding', 'formazione', 'abilitazione', 'training', 'enablement', 'insegn', 'teach', 'capacita', 'treinamento', 'formacao', 'ensina', 'centro de compet'], p: 1.5, c: ['ai'],
       a: { it: 'Nell’AI Competence Center di Tinexta Infocert Bruno si occupa di abilitazione e formazione: workshop, onboarding dei team e una rete di champion che diffonde le pratiche. In più costruisce skill e connettori MCP per gli agenti.',
-           en: 'In the AI Competence Center at Tinexta Infocert, Bruno works on enablement and training: workshops, team onboarding and a network of champions who spread the practices. He also builds skills and MCP connectors for agents.' } },
-    { k: ['mcp', 'connett', 'connector', 'agent', 'skill e', 'skills and', 'tool '], p: 2, c: ['ai'],
+           en: 'In the AI Competence Center at Tinexta Infocert, Bruno works on enablement and training: workshops, team onboarding and a network of champions who spread the practices. He also builds skills and MCP connectors for agents.',
+           pt: 'No AI Competence Center da Tinexta Infocert, o Bruno cuida de capacitação e treinamento: workshops, onboarding dos times e uma rede de champions que espalha as práticas. Além disso, constrói skills e conectores MCP para agentes.' } },
+    { k: ['mcp', 'connett', 'connector', 'conector', 'agent', 'skill e', 'skills and', 'skills e', 'tool ', 'ferrament'], p: 2, c: ['ai'],
       a: { it: 'Bruno costruisce skill e connettori MCP: sono il modo in cui un agente riceve regole, strumenti e conoscenza del dominio. È la parte più pratica del suo lavoro nel Competence Center.',
-           en: 'Bruno builds skills and MCP connectors: they are how an agent gets rules, tools and domain knowledge. It is the most hands-on part of his work in the Competence Center.' } },
-    { k: ['kubern', 'k8s', 'cka', 'cloud', 'azure', 'container', 'docker', 'devops', 'certific'], p: 2, c: ['skills'],
-      a: { it: 'Su Kubernetes Bruno gioca in casa: è Certified Kubernetes Administrator (CKA), ha completato LFS258 e guida le decisioni architetturali su piattaforme Java in ambienti Kubernetes. Ha anche la certificazione Microsoft Azure Solutions Architect Technologies.',
-           en: 'Kubernetes is home turf for Bruno: he is a Certified Kubernetes Administrator (CKA), completed LFS258 and leads architectural decisions on Java platforms running on Kubernetes. He also holds the Microsoft Azure Solutions Architect Technologies certification.' } },
-    { k: ['java', 'kotlin', 'spring', 'stack', 'tecnolog', 'technolog', 'linguagg', 'programming', 'competenz', 'skills ', 'backend', 'android', 'codice', 'code '], p: 1.5, c: ['skills'],
+           en: 'Bruno builds skills and MCP connectors: they are how an agent gets rules, tools and domain knowledge. It is the most hands-on part of his work in the Competence Center.',
+           pt: 'O Bruno constrói skills e conectores MCP: é assim que um agente recebe regras, ferramentas e conhecimento de domínio. É a parte mais prática do trabalho dele no Competence Center.' } },
+    { k: ['kubern', 'k8s', 'cka', 'cloud', 'azure', 'container', 'docker', 'devops', 'certific', 'nuvem'], p: 2, c: ['skills'],
+      a: { it: 'Su Kubernetes Bruno gioca in casa: ha conseguito la certificazione CKA (Certified Kubernetes Administrator), ha completato il corso LFS258 e guida le decisioni architetturali su piattaforme Java in ambienti Kubernetes. Ha conseguito anche la certificazione Microsoft Azure Solutions Architect Technologies.',
+           en: 'Kubernetes is home turf for Bruno: he earned the CKA (Certified Kubernetes Administrator) certification, completed the LFS258 course and leads architectural decisions on Java platforms running on Kubernetes. He also earned the Microsoft Azure Solutions Architect Technologies certification.',
+           pt: 'Em Kubernetes o Bruno joga em casa: conquistou a certificação CKA (Certified Kubernetes Administrator), concluiu o curso LFS258 e conduz as decisões de arquitetura em plataformas Java que rodam em Kubernetes. Também conquistou a certificação Microsoft Azure Solutions Architect Technologies.' } },
+    { k: ['java', 'kotlin', 'spring', 'stack', 'tecnolog', 'technolog', 'linguag', 'programming', 'programa', 'competenz', 'competencias', 'habilidad', 'skills ', 'backend', 'android', 'codice', 'code ', 'codigo '], p: 1.5, c: ['skills'],
       a: { it: 'Java prima di tutto, dal 2010. Poi Kotlin, Spring, Kubernetes e Azure. Lungo il percorso anche C, Android, JavaScript e Node.js. Oggi lo stack include gli strumenti dell’AI engineering: specifiche, agenti, skill e MCP.',
-           en: 'Java first, since 2010. Then Kotlin, Spring, Kubernetes and Azure. Along the way also C, Android, JavaScript and Node.js. Today the stack includes the tools of AI engineering: specs, agents, skills and MCP.' } },
-    { k: ['esperienz', 'experience', 'carriera', 'career', 'percorso', 'lavorato', 'worked', 'aziend', 'compan', 'intel', 'targa', 'eco-mind', 'ecomind', 'infocert', 'tinexta', 'brasil', 'brazil', 'curriculum', 'resume', 'cv ', 'anni', 'years', 'background', 'storia', 'history'], p: 0.5, c: ['experience'],
+           en: 'Java first, since 2010. Then Kotlin, Spring, Kubernetes and Azure. Along the way also C, Android, JavaScript and Node.js. Today the stack includes the tools of AI engineering: specs, agents, skills and MCP.',
+           pt: 'Java em primeiro lugar, desde 2010. Depois Kotlin, Spring, Kubernetes e Azure. Pelo caminho, também C, Android, JavaScript e Node.js. Hoje o stack inclui as ferramentas de AI engineering: especificações, agentes, skills e MCP.' } },
+    { k: ['esperienz', 'experienc', 'carriera', 'career', 'carreira', 'percorso', 'trajetoria', 'lavorato', 'worked', 'trabalhou', 'aziend', 'compan', 'empresa', 'intel', 'targa', 'eco-mind', 'ecomind', 'infocert', 'tinexta', 'brasil', 'brazil', 'curriculum', 'curriculo', 'resume', 'cv ', 'anni', 'years', 'anos ', 'background', 'storia', 'history', 'historia'], p: 0.5, c: ['experience'],
       a: { it: 'Sette aziende in due continenti. In Brasile: ricerca al CTI Renato Archer, ERP enterprise, poi Intel. In Italia dal 2016: IoT e fleet management in Targa Telematics, full-stack in Eco-Mind e, dal 2023, architettura in Tinexta Infocert.',
-           en: 'Seven companies on two continents. In Brazil: research at CTI Renato Archer, enterprise ERP, then Intel. In Italy since 2016: IoT and fleet management at Targa Telematics, full-stack at Eco-Mind and, since 2023, architecture at Tinexta Infocert.' } },
-    { k: ['studi', 'study', 'impar', 'learn', 'curios', 'corso', 'course', 'libri', 'book', 'aggiorn'], p: 1.5, c: ['learning'],
+           en: 'Seven companies on two continents. In Brazil: research at CTI Renato Archer, enterprise ERP, then Intel. In Italy since 2016: IoT and fleet management at Targa Telematics, full-stack at Eco-Mind and, since 2023, architecture at Tinexta Infocert.',
+           pt: 'Sete empresas em dois continentes. No Brasil: pesquisa no CTI Renato Archer, ERP enterprise e depois Intel. Na Itália desde 2016: IoT e gestão de frotas na Targa Telematics, full-stack na Eco-Mind e, desde 2023, arquitetura na Tinexta Infocert.' } },
+    { k: ['studi', 'study', 'estud', 'impar', 'learn', 'aprend', 'curios', 'corso', 'course', 'curso', 'libri', 'book', 'livro', 'aggiorn'], p: 1.5, c: ['learning'],
       a: { it: 'In questo momento: AWS AI-DLC, Spec-Driven Development, workflow agentici, skill e MCP. Per Bruno studiare è un’abitudine: ogni dominio nuovo è passato da studio, esperimento, costruzione e condivisione con il team.',
-           en: 'Right now: AWS AI-DLC, Spec-Driven Development, agentic workflows, skills and MCP. Studying is a habit for Bruno: every new domain has gone through study, experiment, build and sharing with the team.' } },
-    { k: ['perche', 'why', 'assum', 'hire', 'sfid', 'challenge', 'forza', 'strength', 'lavorare con', 'work with', 'valore', 'different'], p: 1, c: ['approach', 'contact'],
+           en: 'Right now: AWS AI-DLC, Spec-Driven Development, agentic workflows, skills and MCP. Studying is a habit for Bruno: every new domain has gone through study, experiment, build and sharing with the team.',
+           pt: 'Neste momento: AWS AI-DLC, Spec-Driven Development, fluxos agênticos, skills e MCP. Estudar é um hábito para o Bruno: cada novo domínio passou por estudo, experimento, construção e compartilhamento com o time.' } },
+    { k: ['perche', 'why', 'por que', 'porque', 'assum', 'hire', 'contrat', 'sfid', 'challenge', 'desafio', 'forza', 'strength', 'forca', 'lavorare con', 'work with', 'trabalhar com', 'valore', 'valor ', 'different'], p: 1, c: ['approach', 'contact'],
       a: { it: 'Tre motivi. Tiene insieme architettura, codice e persone. Porta l’AI nei team con metodo e criterio. E davanti a un problema che non conosce fa la cosa più utile: lo studia fino in fondo. Le sfide difficili sono quelle che preferisce.',
-           en: 'Three reasons. He holds architecture, code and people together. He brings AI into teams with method and judgment. And when he meets a problem he doesn’t know, he does the most useful thing: he studies it all the way down. Hard challenges are the ones he likes best.' } },
-    { k: ['progett', 'project', 'vinoozy', 'trasloco', 'app ', 'gioco', 'game', 'github', 'open source', 'hobby', 'vino', 'wine', 'carte ', 'cards'], p: 1.5, c: ['projects'],
-      a: { it: 'Fuori dal lavoro Bruno ha costruito Vinoozy, un’app Flutter per gestire la cantina anche offline, e Trasloco, un solitario con le carte regionali italiane scritto in Kotlin e pubblicato su Google Play.',
-           en: 'Outside work Bruno built Vinoozy, a Flutter app for managing a wine cellar even offline, and Trasloco, a solitaire game with regional Italian decks, written in Kotlin and published on Google Play.' } },
-    { k: ['contatt', 'contact', 'email', 'mail', 'linkedin', 'scriv', 'reach', 'telefono', 'phone', 'parlare', 'talk', 'sentire'], p: 1.5, c: ['contact', 'mail'],
+           en: 'Three reasons. He holds architecture, code and people together. He brings AI into teams with method and judgment. And when he meets a problem he doesn’t know, he does the most useful thing: he studies it all the way down. Hard challenges are the ones he likes best.',
+           pt: 'Três motivos. Ele mantém arquitetura, código e pessoas juntos. Leva a IA para os times com método e critério. E, diante de um problema que não conhece, faz a coisa mais útil: estuda até o fim. Os desafios difíceis são os que ele prefere.' } },
+    { k: ['progett', 'project', 'projeto', 'vinoozy', 'trasloco', 'tiramisu', 'app ', 'aplicativo', 'gioco', 'giochi', 'game', 'jogo', 'github', 'hobby', 'vino', 'wine', 'vinho', 'carte ', 'cards', 'cartas'], p: 1.5, c: ['projects'],
+      a: { it: 'Fuori dal lavoro Bruno ha costruito Vinoozy, un’app Flutter per gestire la cantina anche offline, e Trasloco, un solitario con le carte regionali italiane scritto in Kotlin e pubblicato su Google Play. Ha in cantiere anche un nuovo gioco, Tiramisù.',
+           en: 'Outside work Bruno built Vinoozy, a Flutter app for managing a wine cellar even offline, and Trasloco, a solitaire game with regional Italian decks, written in Kotlin and published on Google Play. He also has a new game in the works, Tiramisù.',
+           pt: 'Fora do trabalho, o Bruno construiu o Vinoozy, um app Flutter para gerenciar a adega mesmo offline, e o Trasloco, um jogo de paciência com baralhos regionais italianos, feito em Kotlin e publicado no Google Play. Também tem um novo jogo em construção, o Tiramisù.' } },
+    { k: ['open source', 'opensource', 'codigo aberto', 'systemd', 'yocto', 'openembedded', 'clear linux', 'clearlinux', 'soletta', 'linux', 'kernel', 'embedded', 'embarcado', 'commit', 'contribu', 'patch'], p: 2, c: ['opensource'],
+      a: { it: 'Negli anni in Intel, tra il 2015 e il 2016, Bruno ha contribuito a progetti open source: un commit in systemd entrato nella versione 219, patch in Yocto e OpenEmbedded, fix e packaging in Clear Linux. Nel progetto Soletta ha avviato il layer Yocto meta-soletta ed è l’autore principale della Soletta Dev App. I link ai commit sono nella sezione Progetti.',
+           en: 'During his Intel years, in 2015 and 2016, Bruno contributed to open-source projects: a commit in systemd that shipped in version 219, patches in Yocto and OpenEmbedded, fixes and packaging in Clear Linux. In the Soletta project he started the meta-soletta Yocto layer and is the main author of the Soletta Dev App. The commit links are in the Projects section.',
+           pt: 'Nos anos de Intel, entre 2015 e 2016, o Bruno contribuiu com projetos open source: um commit no systemd que entrou na versão 219, patches no Yocto e no OpenEmbedded, correções e empacotamento no Clear Linux. No projeto Soletta, ele começou a layer Yocto meta-soletta e é o autor principal do Soletta Dev App. Os links dos commits estão na seção Projetos.' } },
+    { k: ['contatt', 'contact', 'contato', 'email', 'e-mail', 'mail', 'linkedin', 'scriv', 'escrev', 'reach', 'telefono', 'telefone', 'phone', 'parlare', 'talk', 'falar', 'conversar', 'sentire'], p: 1.5, c: ['contact', 'mail'],
       a: { it: 'Il modo più diretto è l’email: ' + EMAIL + '. Lo trovi anche su LinkedIn e GitHub.',
-           en: 'The most direct way is email: ' + EMAIL + '. You can also find him on LinkedIn and GitHub.' } },
-    { k: ['lingu', 'language', 'inglese', 'english', 'portoghese', 'portuguese', 'italiano', 'italian', 'parla ', 'speak'], p: 1, c: ['skills'],
+           en: 'The most direct way is email: ' + EMAIL + '. You can also find him on LinkedIn and GitHub.',
+           pt: 'O jeito mais direto é o e-mail: ' + EMAIL + '. Ele também está no LinkedIn e no GitHub.' } },
+    { k: ['lingu', 'language', 'idioma', 'inglese', 'english', 'ingles', 'portoghese', 'portuguese', 'portugues', 'italiano', 'italian', 'parla ', 'speak', 'fala '], p: 1, c: ['skills'],
       a: { it: 'Italiano e portoghese da madrelingua, inglese professionale. Bruno ha lavorato in team internazionali in Brasile e in Italia.',
-           en: 'Native Italian and Portuguese, professional English. Bruno has worked in international teams in Brazil and in Italy.' } },
-    { k: ['trust', 'eidas', 'compliance', 'conformita', 'sicurezza', 'security', 'firma', 'signature', 'identita', 'identity', 'dominio', 'domain', 'regolament', 'regulat'], p: 2, c: ['ai'],
+           en: 'Native Italian and Portuguese, professional English. Bruno has worked in international teams in Brazil and in Italy.',
+           pt: 'Italiano e português nativos, inglês profissional. O Bruno trabalhou em times internacionais no Brasil e na Itália.' } },
+    { k: ['trust', 'eidas', 'compliance', 'conformita', 'conformidade', 'sicurezza', 'security', 'seguranca', 'firma', 'signature', 'assinatura', 'identita', 'identity', 'identidade', 'dominio', 'domain', 'regolament', 'regulat', 'confianca'], p: 2, c: ['ai'],
       a: { it: 'Bruno lavora su piattaforme di digital trust in ambito eIDAS2. In questo dominio sicurezza, conformità e affidabilità sono requisiti di partenza, e anche l’AI va usata con lo stesso rigore.',
-           en: 'Bruno works on digital trust platforms in the eIDAS2 space. In this domain security, compliance and reliability are the starting requirements, and AI has to be used with the same rigour.' } },
-    { k: ['leader', 'team', 'mentor', 'gestion', 'manage', 'persone', 'people', 'guida'], p: 1, c: ['approach'],
+           en: 'Bruno works on digital trust platforms in the eIDAS2 space. In this domain security, compliance and reliability are the starting requirements, and AI has to be used with the same rigour.',
+           pt: 'O Bruno trabalha com plataformas de digital trust no âmbito do eIDAS2. Nesse domínio, segurança, conformidade e confiabilidade são requisitos de partida, e a IA também precisa ser usada com o mesmo rigor.' } },
+    { k: ['leader', 'lider', 'team', 'equipe', 'mentor', 'gestion', 'gestao', 'manage', 'persone', 'people', 'pessoas', 'guida'], p: 1, c: ['approach'],
       a: { it: 'Bruno guida le decisioni tecniche, affianca gli ingegneri e continua a contribuire al codice. Crede nel mentoring e in team che capiscono il perché delle scelte.',
-           en: 'Bruno guides technical decisions, mentors engineers and keeps contributing to the code. He believes in mentoring and in teams that understand the reasoning behind their choices.' } },
-    { k: ['dove', 'where', 'torino', 'turin', 'vive', 'lives', 'based', 'remot', 'milano', 'milan', 'sede'], p: 0.5, c: ['experience'],
+           en: 'Bruno guides technical decisions, mentors engineers and keeps contributing to the code. He believes in mentoring and in teams that understand the reasoning behind their choices.',
+           pt: 'O Bruno conduz as decisões técnicas, acompanha os engenheiros e continua contribuindo com o código. Acredita em mentoria e em times que entendem o porquê das escolhas.' } },
+    { k: ['dove', 'where', 'onde', 'torino', 'turin', 'turim', 'vive', 'lives', 'mora ', 'based', 'remot', 'milano', 'milan', 'milao', 'sede'], p: 0.5, c: ['experience'],
       a: { it: 'Bruno vive a Torino. Il suo ruolo attuale in Tinexta Infocert fa capo a Milano.',
-           en: 'Bruno lives in Turin. His current role at Tinexta Infocert is based in Milan.' } },
-    { k: ['sei un', 'sei una', 'are you', 'reale', 'real ', 'vero ', 'vera ', 'chatgpt', 'gpt', 'claude', 'modello', 'model', 'bot ', 'umano', 'human', 'come funzioni', 'how do you work', 'privacy', 'dati ', 'data '], p: 1.5, c: ['mail'],
+           en: 'Bruno lives in Turin. His current role at Tinexta Infocert is based in Milan.',
+           pt: 'O Bruno mora em Turim. O cargo atual dele na Tinexta Infocert é baseado em Milão.' } },
+    { k: ['sei un', 'sei una', 'are you', 'voce e', 'reale', 'real ', 'vero ', 'vera ', 'verdade', 'chatgpt', 'gpt', 'claude', 'modello', 'model', 'bot ', 'robo', 'umano', 'human', 'come funzioni', 'how do you work', 'como funciona', 'privacy', 'privacidade', 'dati ', 'data ', 'dados '], p: 1.5, c: ['mail'],
       a: { it: 'Sono un agente dimostrativo: le risposte le ha scritte Bruno e girano nel tuo browser, senza modelli e senza chiamate di rete. Per una conversazione vera c’è lui.',
-           en: 'I am a demo agent: Bruno wrote the answers and they run in your browser, with no model and no network calls. For a real conversation, there is Bruno himself.' } },
-    { k: ['help', 'aiuto', 'comandi', 'commands', 'cosa posso', 'what can', 'menu'], p: 1, c: [],
-      a: { it: 'Puoi chiedermi di: percorso, AI, AI-DLC, Spec-Driven Development, Competence Center, Kubernetes, stack, studio, progetti, contatti. La command palette si apre con Cmd o Ctrl + K.',
-           en: 'You can ask me about: experience, AI, AI-DLC, Spec-Driven Development, Competence Center, Kubernetes, stack, learning, projects, contact. The command palette opens with Cmd or Ctrl + K.' } },
+           en: 'I am a demo agent: Bruno wrote the answers and they run in your browser, with no model and no network calls. For a real conversation, there is Bruno himself.',
+           pt: 'Sou um agente de demonstração: as respostas foram escritas pelo Bruno e rodam no seu navegador, sem modelo e sem chamadas de rede. Para uma conversa de verdade, fale com ele.' } },
+    { k: ['help', 'aiuto', 'ajuda', 'comand', 'commands', 'cosa posso', 'what can', 'o que posso', 'menu'], p: 1, c: [],
+      a: { it: 'Puoi chiedermi di: percorso, AI, AI-DLC, Spec-Driven Development, Competence Center, Kubernetes, stack, studio, progetti, open source, contatti. La command palette si apre con Cmd o Ctrl + K.',
+           en: 'You can ask me about: experience, AI, AI-DLC, Spec-Driven Development, Competence Center, Kubernetes, stack, learning, projects, open source, contact. The command palette opens with Cmd or Ctrl + K.',
+           pt: 'Você pode me perguntar sobre: trajetória, IA, AI-DLC, Spec-Driven Development, Competence Center, Kubernetes, stack, estudo, projetos, open source, contato. A paleta de comandos abre com Cmd ou Ctrl + K.' } },
     { k: ['sudo', 'rm -rf', 'hack'], p: 3, c: ['mail'],
       a: { it: 'Permesso accordato. Prossimo passo: scrivi a Bruno e proponi la tua sfida.',
-           en: 'Permission granted. Next step: email Bruno and pitch your challenge.' } },
-    { k: ['ciao', 'hello', 'hi ', 'hey', 'salve', 'buongiorno', 'buonasera', 'ola ', 'grazie', 'thanks', 'thank'], p: 0.5, c: [],
+           en: 'Permission granted. Next step: email Bruno and pitch your challenge.',
+           pt: 'Permissão concedida. Próximo passo: escreva para o Bruno e proponha o seu desafio.' } },
+    { k: ['ciao', 'hello', 'hi ', 'hey', 'salve', 'buongiorno', 'buonasera', 'oi ', 'ola ', 'bom dia', 'boa tarde', 'boa noite', 'grazie', 'thanks', 'thank', 'obrigad', 'valeu'], p: 0.5, c: [],
       a: { it: 'Ciao! Sono l’agente dimostrativo di Bruno. Chiedimi del suo percorso, di come usa l’AI o di cosa sta studiando.',
-           en: 'Hi! I am Bruno’s demo agent. Ask me about his experience, how he uses AI or what he is studying.' } }
+           en: 'Hi! I am Bruno’s demo agent. Ask me about his experience, how he uses AI or what he is studying.',
+           pt: 'Oi! Sou o agente de demonstração do Bruno. Pergunte sobre a trajetória dele, como ele usa a IA ou o que está estudando.' } }
   ];
   const FALLBACK = { c: ['mail'],
     a: { it: 'Su questo non ho una risposta scritta. Prova con percorso, AI, AI-DLC, Kubernetes, studio o progetti. Oppure chiedilo direttamente a Bruno.',
-         en: 'I don’t have a written answer for that. Try experience, AI, AI-DLC, Kubernetes, learning or projects. Or ask Bruno directly.' } };
+         en: 'I don’t have a written answer for that. Try experience, AI, AI-DLC, Kubernetes, learning or projects. Or ask Bruno directly.',
+         pt: 'Para isso eu não tenho uma resposta escrita. Tente trajetória, IA, AI-DLC, Kubernetes, estudo ou projetos. Ou pergunte direto ao Bruno.' } };
 
   function match(question) {
     const text = ' ' + norm(question) + ' ';
@@ -489,15 +526,17 @@
     const jump = id => ({ group: T.pGo, label: SEC[id][lang], hint: SEC[id].href, run: () => go(SEC[id].href) });
     const items = [
       { group: T.pGo, label: T.pHome, hint: '#top', run: () => go('#top') },
-      jump('ai'), jump('method'), jump('approach'), jump('experience'), jump('skills'), jump('learning'), jump('projects'), jump('contact')
+      jump('ai'), jump('method'), jump('approach'), jump('experience'), jump('skills'), jump('learning'), jump('projects'), jump('opensource'), jump('contact')
     ];
     if (agent) items.push({ group: T.pDo, label: T.pFocus, hint: 'bruno.agent', run: () => agent.focus() });
     if (canCopy) items.push({ group: T.pDo, label: T.pCopy, hint: EMAIL, run: () => { go('#contact'); copyEmail(); } });
     items.push(
       { group: T.pDo, label: 'LinkedIn', hint: 'linkedin.com/in/brunobottazzini', run: () => window.open('https://www.linkedin.com/in/brunobottazzini/', '_blank', 'noopener') },
-      { group: T.pDo, label: 'GitHub', hint: 'github.com/brunobottazzini', run: () => window.open('https://github.com/brunobottazzini', '_blank', 'noopener') },
-      { group: T.pDo, label: T.pLang, hint: T.pLangHint, run: () => { const link = $('.languages a:not([aria-current])'); if (link) window.location.href = link.href; } }
+      { group: T.pDo, label: 'GitHub', hint: 'github.com/brunobottazzini', run: () => window.open('https://github.com/brunobottazzini', '_blank', 'noopener') }
     );
+    $$('.languages a:not([aria-current])').forEach(link => items.push({
+      group: T.pLangs, label: link.getAttribute('aria-label'), hint: link.textContent, run: () => { window.location.href = link.href; }
+    }));
 
     let shown = [], active = 0;
     const setActive = index => {
