@@ -32,7 +32,7 @@ Il file `.nojekyll` segnala che i file devono essere serviti come sito statico. 
 - `assets/style.css`: design system (token colore e font in cima al file), layout e responsive.
 - `assets/script.js`: tutte le parti interattive, commentate blocco per blocco.
 - `assets/fonts/`: Manrope, JetBrains Mono e Instrument Serif Italic in formato woff2, con licenza in `OFL.txt`.
-- `assets/projects/`: icone originali dei progetti personali Vinoozy e Trasloco.
+- `assets/projects/`: icone originali dei progetti personali Vinoozy, Trasloco e Tiramisù.
 - `assets/social-preview.jpg`: anteprima 1200 × 630 per LinkedIn e altri social.
 - `404.html`, `robots.txt`, `sitemap.xml`, metadati Open Graph, hreflang e JSON-LD: indicizzazione e condivisione.
 
@@ -115,10 +115,11 @@ Verificati l'11 novembre 2026 cercando nella storia git dei repository i commit 
 - Trasloco: https://github.com/brunobottazzini/Trasloco ·
   Google Play: https://play.google.com/store/apps/details?id=com.bottazzini.trasloco
 - Tiramisù: https://github.com/brunobottazzini/Tiramisu · un gioco, per indicazione del proprietario.
-  Il repository per ora contiene solo titolo e licenza MIT.
+  Il logo è `tools/launcher_icon.svg` del branch `master`, copiato senza modifiche in `assets/projects/tiramisu.svg`.
+  Il branch predefinito `main` contiene solo README e licenza MIT: il codice è su `master`.
 - ledfbp: https://github.com/brunobottazzini/ledfbp · esempio FBP per Soletta.
 
-Le icone di Vinoozy e Trasloco provengono dai rispettivi repository dell'autore.
+Le icone di Vinoozy, Trasloco e Tiramisù provengono dai rispettivi repository dell'autore.
 Il CV scaricabile non è pubblicato sul sito, su richiesta del proprietario.
 
 ## Privacy
