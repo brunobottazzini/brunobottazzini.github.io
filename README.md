@@ -72,7 +72,7 @@ Se nessuna voce corrisponde, l'agente lo dice e rimanda all'email: non inventa.
 ## Aggiornare i contenuti
 
 Modificare **tutte e tre** le versioni HTML (`index.html`, `en/index.html`, `pt-br/index.html`). Dopo una
-modifica a CSS o JS, aumentare il numero in `style.css?v=4` e `script.js?v=4` dentro le tre pagine e in
+modifica a CSS o JS, aumentare il numero in `style.css?v=5` e `script.js?v=5` dentro le tre pagine e in
 `404.html`, così i browser scaricano la versione nuova. Verificare ruolo corrente, contatti e certificazioni
 quando il profilo cambia. Se il dominio cambia, aggiornare canonical, Open Graph, JSON-LD, hreflang, sitemap
 e robots.txt.
@@ -86,6 +86,9 @@ e robots.txt.
 - Descrizione di AI-DLC (fasi, bolt, unit of work, Mob Elaboration / Mob Construction):
   https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/
 - CKA: resta tra le certificazioni, ma su indicazione del proprietario non compare tra i dati in evidenza.
+- Gestione delle persone del team, direzione dell'architettura e decision making (dato "Ownership"
+  nell'hero, principio "Leadership che decide", ruolo attuale): indicazioni dirette del proprietario.
+  La parola "rischi" è stata evitata di proposito, su indicazione del proprietario.
 - Non sono state aggiunte metriche di impatto o referenze non documentate.
 - Foto dal profilo GitHub pubblico dell'utente, ID 4460234.
 
