@@ -30,9 +30,9 @@
   <meta name="twitter:image" content="https://brunobottazzini.github.io/assets/social-preview.jpg">
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="./assets/fonts/manrope-var.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="./assets/style.css?v=5">
+  <link rel="stylesheet" href="./assets/style.css?v=6">
   <script>document.documentElement.classList.add('js')</script>
-  <script src="./assets/script.js?v=5" defer></script>
+  <script src="./assets/script.js?v=6" defer></script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Bruno Bottazzini", "url": "https://brunobottazzini.github.io/", "image": "https://brunobottazzini.github.io/assets/bruno-bottazzini.jpg", "jobTitle": "Software Architect & Technical Lead", "description": "Software Architect e Technical Lead in Tinexta Infocert, parte dell’AI Competence Center. Progetto sistemi cloud-native e porto nei team Spec-Driven Development e AWS AI-DLC.", "sameAs": ["https://www.linkedin.com/in/brunobottazzini/", "https://github.com/brunobottazzini"], "knowsLanguage": ["it", "en", "pt"], "knowsAbout": ["Software Architecture", "Spec-Driven Development", "AI-Driven Development Lifecycle (AI-DLC)", "AI-assisted engineering", "Kubernetes", "Java", "Cloud-native systems", "Embedded Linux", "Open source"], "worksFor": {"@type": "Organization", "name": "Tinexta Infocert"}, "homeLocation": {"@type": "Place", "name": "Turin, Italy"}}</script>
 </head>
 <body id="top">
@@ -450,6 +450,35 @@
         </div>
         <div class="email-line"><a href="mailto:bottazzinibruno@gmail.com">bottazzinibruno@gmail.com</a><button type="button" class="copy-email" data-copy-email hidden>Copia email</button></div>
         <div class="copy-status" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section id="play" class="section play" aria-labelledby="play-title">
+    <div class="wrap play-grid">
+      <div class="play-copy reveal">
+        <p class="eyebrow">Pausa caffè</p>
+        <h2 id="play-title">Human <em>in the loop.</em></h2>
+        <p class="lead">L’AI propone, tu decidi. Approva quello che può andare in produzione e ferma il resto, prima che scada il tempo. Tre errori e il turno finisce.</p>
+        <p class="play-keys">Da tastiera: A rifiuta, D approva. Vanno bene anche le frecce.</p>
+      </div>
+      <div class="game hud reveal" id="game" data-state="idle" style="--d:1">
+        <div class="game-bar">
+          <span>human-in-the-loop</span>
+          <span class="game-stats"><span>punti <b id="game-score">0</b></span><span>record <b id="game-best">0</b></span><span class="game-lives" role="img" aria-label="Errori rimasti"><i></i><i></i><i></i></span></span>
+        </div>
+        <div class="game-body">
+          <p class="who game-label">L’AI propone</p>
+          <p class="game-card" id="game-proposal" aria-live="polite">git push --force main</p>
+          <div class="game-timer" aria-hidden="true"><i></i></div>
+          <div class="game-actions">
+            <button class="game-btn no" type="button" id="game-no">Rifiuta <kbd>A</kbd></button>
+            <button class="game-btn yes" type="button" id="game-yes">Approva <kbd>D</kbd></button>
+          </div>
+          <button class="button game-start" type="button" id="game-start">Gioca</button>
+          <p class="game-msg" id="game-msg" role="status" aria-live="polite">Esempio: questa va rifiutata.</p>
+        </div>
       </div>
     </div>
   </section>

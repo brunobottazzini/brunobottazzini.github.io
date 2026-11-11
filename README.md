@@ -56,6 +56,7 @@ si fermano con `prefers-reduced-motion`.
 | Competenze con riscontro | sezione Competenze | Ogni competenza mostra dove è stata messa in pratica. |
 | Registro di addestramento e stack nel tempo | sezione Studio continuo | Le righe e le barre compaiono quando la sezione entra in vista. Le barre sono in scala sulle date dei ruoli del CV: lime se la tecnologia è in uso oggi. |
 | Mostra tutti i progetti | sezione Progetti | Elemento `<details>`: apre i progetti Soletta. Funziona anche senza JavaScript. |
+| Mini gioco "Human in the loop" | in fondo, prima del footer | L'AI propone una riga alla volta, il visitatore approva o rifiuta prima che scada il tempo (pulsanti, `A`/`D` o frecce). Tre errori chiudono il turno. Il tempo si ferma se la sezione non è visibile. |
 
 ### Aggiornare le risposte dell'agente
 
@@ -69,10 +70,16 @@ In `assets/script.js` cercare `const KB`. Ogni voce ha:
 
 Se nessuna voce corrisponde, l'agente lo dice e rimanda all'email: non inventa.
 
+### Aggiornare le proposte del mini gioco
+
+In `assets/script.js` cercare `const GOOD` e `const BAD`: sono le righe da approvare e quelle da rifiutare.
+Sono volutamente in inglese tecnico, uguali nelle tre lingue. Tenerle sotto i 28 caratteri, così stanno su una
+riga anche sul telefono.
+
 ## Aggiornare i contenuti
 
 Modificare **tutte e tre** le versioni HTML (`index.html`, `en/index.html`, `pt-br/index.html`). Dopo una
-modifica a CSS o JS, aumentare il numero in `style.css?v=5` e `script.js?v=5` dentro le tre pagine e in
+modifica a CSS o JS, aumentare il numero in `style.css?v=6` e `script.js?v=6` dentro le tre pagine e in
 `404.html`, così i browser scaricano la versione nuova. Verificare ruolo corrente, contatti e certificazioni
 quando il profilo cambia. Se il dominio cambia, aggiornare canonical, Open Graph, JSON-LD, hreflang, sitemap
 e robots.txt.
@@ -128,7 +135,8 @@ Il CV scaricabile non è pubblicato sul sito, su richiesta del proprietario.
 ## Privacy
 
 Nessun analytics, cookie, modulo o servizio di terze parti caricato durante la visita. Font e script sono
-ospitati localmente. L'agente dimostrativo gira nel browser e non invia nulla.
+ospitati localmente. L'agente dimostrativo gira nel browser e non invia nulla. Il mini gioco salva il record
+nel `localStorage` del browser (chiave `bb-hitl-best`): resta sul dispositivo e non viene mai trasmesso.
 
 ## File non più usati
 

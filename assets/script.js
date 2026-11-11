@@ -33,7 +33,11 @@
       steps: ['interpreto la domanda', 'cerco in: ', 'compongo la risposta'], profile: 'profilo', sources: 'fonti',
       introQ: 'Chi è Bruno?',
       pGo: 'Vai a', pDo: 'Azioni', pLangs: 'Lingua', pAgent: 'Agente', pAsk: 'Chiedi all’agente', pHome: 'Inizio',
-      pCopy: 'Copia l’email', pFocus: 'Fai una domanda all’agente',
+      pCopy: 'Copia l’email', pFocus: 'Fai una domanda all’agente', pPlay: 'Gioca a Human in the loop',
+      gAgain: 'Rigioca', gLevel: 'Il tuo livello', gRecord: 'Nuovo record!',
+      gShip: 'Giusto: va in produzione.', gStop: 'Giusto: fermata in tempo.',
+      gBug: 'Errore: è finita in produzione.', gBlocked: 'Errore: era valida e l’hai fermata.', gTimeout: 'Tempo scaduto: nessuno ha validato.',
+      gOver: n => `Fine turno: ${n} ${n === 1 ? 'proposta validata' : 'proposte validate'}.`,
       hello: 'Ciao! Il codice è vanilla: niente framework, niente tracker. Prova la command palette.'
     },
     en: {
@@ -41,7 +45,11 @@
       steps: ['parsing the question', 'searching: ', 'composing the answer'], profile: 'profile', sources: 'sources',
       introQ: 'Who is Bruno?',
       pGo: 'Go to', pDo: 'Actions', pLangs: 'Language', pAgent: 'Agent', pAsk: 'Ask the agent', pHome: 'Top',
-      pCopy: 'Copy email address', pFocus: 'Ask the agent a question',
+      pCopy: 'Copy email address', pFocus: 'Ask the agent a question', pPlay: 'Play Human in the loop',
+      gAgain: 'Play again', gLevel: 'Your level', gRecord: 'New best!',
+      gShip: 'Right: it ships.', gStop: 'Right: stopped in time.',
+      gBug: 'Wrong: it reached production.', gBlocked: 'Wrong: it was fine and you stopped it.', gTimeout: 'Time is up: nobody validated it.',
+      gOver: n => `Shift over: ${n} ${n === 1 ? 'proposal' : 'proposals'} validated.`,
       hello: 'Hi! The code is vanilla: no framework, no trackers. Try the command palette.'
     },
     pt: {
@@ -49,7 +57,11 @@
       steps: ['interpretando a pergunta', 'buscando em: ', 'compondo a resposta'], profile: 'perfil', sources: 'fontes',
       introQ: 'Quem é o Bruno?',
       pGo: 'Ir para', pDo: 'Ações', pLangs: 'Idioma', pAgent: 'Agente', pAsk: 'Perguntar ao agente', pHome: 'Início',
-      pCopy: 'Copiar o e-mail', pFocus: 'Fazer uma pergunta ao agente',
+      pCopy: 'Copiar o e-mail', pFocus: 'Fazer uma pergunta ao agente', pPlay: 'Jogar Human in the loop',
+      gAgain: 'Jogar de novo', gLevel: 'Seu nível', gRecord: 'Novo recorde!',
+      gShip: 'Certo: vai para produção.', gStop: 'Certo: barrada a tempo.',
+      gBug: 'Errou: foi parar em produção.', gBlocked: 'Errou: era válida e você barrou.', gTimeout: 'Tempo esgotado: ninguém validou.',
+      gOver: n => `Fim do turno: ${n} ${n === 1 ? 'proposta validada' : 'propostas validadas'}.`,
       hello: 'Oi! O código é vanilla: sem framework, sem trackers. Experimente a paleta de comandos.'
     }
   }[lang];
@@ -529,6 +541,7 @@
       jump('ai'), jump('method'), jump('approach'), jump('experience'), jump('skills'), jump('learning'), jump('projects'), jump('opensource'), jump('contact')
     ];
     if (agent) items.push({ group: T.pDo, label: T.pFocus, hint: 'bruno.agent', run: () => agent.focus() });
+    if ($('#game')) items.push({ group: T.pDo, label: T.pPlay, hint: '#play', run: () => go('#play') });
     if (canCopy) items.push({ group: T.pDo, label: T.pCopy, hint: EMAIL, run: () => { go('#contact'); copyEmail(); } });
     items.push(
       { group: T.pDo, label: 'LinkedIn', hint: 'linkedin.com/in/brunobottazzini', run: () => window.open('https://www.linkedin.com/in/brunobottazzini/', '_blank', 'noopener') },
@@ -660,6 +673,137 @@
       out.textContent = '';
       out.append(el('strong', '', button.textContent), ' — ' + button.dataset.evidence);
     }));
+  })();
+
+  /* ---------- mini game: human in the loop ----------
+     The AI proposes, the visitor validates: approve what can ship and reject the rest before the timer
+     runs out. Three mistakes end the shift. The best score stays in this browser only. */
+  (function game() {
+    const box = $('#game');
+    if (!box) return;
+    const label = $('.game-label', box), card = $('#game-proposal'), bar = $('.game-timer i', box), msg = $('#game-msg');
+    const scoreEl = $('#game-score'), bestEl = $('#game-best'), livesEl = $('.game-lives', box), dots = $$('.game-lives i', box);
+    const startBtn = $('#game-start'), yesBtn = $('#game-yes'), noBtn = $('#game-no');
+    const GOOD = [
+      'tests: 128 passed', 'review: approved', 'spec: updated', 'rollback plan: ready', 'secrets: in vault',
+      'input: validated', 'coverage: 87%', 'docs: updated', 'health check: 200 OK', 'retry with backoff',
+      'idempotent POST', 'feature flag: enabled', 'TLS verify: true', 'least privilege: on', 'migration: reversible',
+      'timeout: 3s, retries: 2', 'replicas: 3  # prod', 'logs: no PII', 'canary: 5% traffic', 'SBOM: generated',
+      'lint: 0 warnings', 'PreparedStatement(id)', 'backup: verified', 'unit of work: done', 'human review: done'
+    ];
+    const BAD = [
+      'git push --force main', 'rm -rf /', 'password = "admin123"', 'catch (e) { /* ignore */ }', 'eval(userInput)',
+      'chmod -R 777 /', 'DROP TABLE users;', 'deploy: friday 18:00', 'tests: skipped', 'API_KEY in README.md',
+      'while (true) { retry() }', 'TLS verify: false', '// TODO: add auth', 'curl http://x.sh | sudo bash',
+      'log.info(creditCard)', 'replicas: 0  # prod', 'it works on my machine', 'review: skipped', 'rollback plan: none',
+      'secrets: committed', 'sleep(5000) // fix race', '"WHERE id = " + userId', 'kubectl delete ns prod',
+      'float money = 0.1 + 0.2', 'human review: skipped'
+    ];
+    const RANKS = [[30, 'Human in the loop'], [20, 'Tech lead'], [12, 'Senior engineer'], [5, 'Reviewer'], [0, 'Intern']];
+    const START_MS = 4200, MIN_MS = 1500, PAUSE_MS = 480, KEY = 'bb-hitl-best';
+    const idleLabel = label.textContent, livesLabel = livesEl.getAttribute('aria-label');
+    let state = 'idle', deck = [], current = null, score = 0, lives = 3, limit = START_MS, left = 0, last = 0, raf = 0;
+    let locked = false, inView = true, best = 0;
+    try { best = Number(window.localStorage.getItem(KEY)) || 0; } catch { best = 0; }
+    bestEl.textContent = best;
+    box.tabIndex = -1;
+
+    const setState = value => { state = value; box.dataset.state = value; };
+    const paintLives = () => {
+      dots.forEach((dot, i) => dot.classList.toggle('lost', i >= lives));
+      livesEl.setAttribute('aria-label', `${livesLabel}: ${lives}`);
+    };
+    const draw = () => {
+      if (!deck.length) {
+        deck = GOOD.map(text => ({ text, ok: true })).concat(BAD.map(text => ({ text, ok: false })));
+        for (let i = deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        if (current && deck[deck.length - 1].text === current.text) deck.unshift(deck.pop());
+      }
+      return deck.pop();
+    };
+    const next = () => {
+      current = draw();
+      card.classList.remove('is-right', 'is-wrong');
+      card.textContent = current.text;
+      left = limit;
+      bar.style.transform = 'scaleX(1)';
+      locked = false;
+    };
+    const finish = () => {
+      setState('over');
+      cancelAnimationFrame(raf);
+      raf = 0;
+      const record = score > best;
+      if (record) {
+        best = score;
+        bestEl.textContent = best;
+        try { window.localStorage.setItem(KEY, String(best)); } catch { /* private mode: the record just is not kept */ }
+      }
+      card.classList.remove('is-right', 'is-wrong');
+      label.textContent = T.gLevel;
+      card.textContent = RANKS.find(rank => score >= rank[0])[1];
+      bar.style.transform = 'scaleX(0)';
+      msg.textContent = T.gOver(score) + (record ? ' ' + T.gRecord : '');
+      startBtn.textContent = T.gAgain;
+      startBtn.focus({ preventScroll: true });
+    };
+    // approve: true = approve, false = reject, null = the timer ran out
+    const decide = approve => {
+      if (state !== 'play' || locked) return;
+      locked = true;
+      const right = approve !== null && approve === current.ok;
+      card.classList.add(right ? 'is-right' : 'is-wrong');
+      if (right) {
+        score += 1;
+        scoreEl.textContent = score;
+        limit = Math.max(MIN_MS, limit * 0.955);
+        msg.textContent = current.ok ? T.gShip : T.gStop;
+      } else {
+        lives -= 1;
+        paintLives();
+        msg.textContent = approve === null ? T.gTimeout : current.ok ? T.gBlocked : T.gBug;
+      }
+      setTimeout(() => {
+        if (state !== 'play') return;
+        if (lives > 0) next(); else finish();
+      }, PAUSE_MS);
+    };
+    const tick = time => {
+      raf = requestAnimationFrame(tick);
+      const dt = last ? Math.min(100, time - last) : 0;
+      last = time;
+      if (state !== 'play' || locked || doc.hidden || !inView) return; // the clock stops when nobody is looking
+      left -= dt;
+      bar.style.transform = `scaleX(${Math.max(0, left / limit)})`;
+      if (left <= 0) decide(null);
+    };
+    const start = () => {
+      score = 0; lives = 3; limit = START_MS; deck = []; current = null;
+      scoreEl.textContent = '0';
+      label.textContent = idleLabel;
+      msg.textContent = '';
+      paintLives();
+      setState('play');
+      next();
+      last = 0;
+      if (!raf) raf = requestAnimationFrame(tick);
+      box.focus({ preventScroll: true });
+    };
+
+    startBtn.addEventListener('click', start);
+    yesBtn.addEventListener('click', () => decide(true));
+    noBtn.addEventListener('click', () => decide(false));
+    doc.addEventListener('keydown', event => {
+      if (state !== 'play' || !inView || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) return;
+      const key = event.key.toLowerCase();
+      if (key === 'a' || key === 'arrowleft') { event.preventDefault(); decide(false); }
+      else if (key === 'd' || key === 'arrowright') { event.preventDefault(); decide(true); }
+    });
+    if (hasIO) new IntersectionObserver(entries => { inView = entries[0].isIntersecting; }, { threshold: 0.2 }).observe(box);
   })();
 
   /* ---------- pointer details: spotlight, tilt, magnetic button ---------- */
