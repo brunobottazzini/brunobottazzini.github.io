@@ -371,6 +371,7 @@ html:not(.js) .skill{cursor:default}
 .oss-head h3{font-size:clamp(21px,2.1vw,27px);letter-spacing:-.035em;line-height:1.2}
 .oss-head p{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .oss-list{border-bottom:1px solid var(--line)}
+.oss-list+.oss-head{margin-top:40px}
 .oss-row{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr) minmax(0,auto);gap:10px clamp(18px,3vw,40px);align-items:start;padding:20px 0;border-top:1px solid var(--line);transition:background .3s}
 .oss-row:hover{background:linear-gradient(90deg,rgba(213,237,172,.045),transparent 70%)}
 .oss-row h4{margin:0;font-size:19px;font-weight:700;letter-spacing:-.03em;line-height:1.3}

@@ -833,6 +833,19 @@
     });
   }
 
+  /* ---------- anchors that land inside a collapsed <details> open it first ---------- */
+  const openTarget = (hash) => {
+    const el = hash && hash.length > 1 && doc.getElementById(decodeURIComponent(hash.slice(1)));
+    if (!el) return;
+    for (let d = el.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
+  };
+  doc.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (a) openTarget(a.getAttribute('href'));
+  });
+  window.addEventListener('hashchange', () => openTarget(location.hash));
+  openTarget(location.hash);
+
   root.classList.add('ready'); // reached only if everything above booted without throwing
   if (window.console && console.info) console.info('%cbruno.bottazzini%c ' + T.hello, 'background:#d5edac;color:#131c0d;padding:2px 6px;font-weight:700', '');
 })();
